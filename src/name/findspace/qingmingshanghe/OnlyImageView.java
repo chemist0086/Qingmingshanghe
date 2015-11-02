@@ -63,7 +63,10 @@ public class OnlyImageView extends View {
 	 * 记录上次两指之间的距离
 	 */
 	private double lastFingerDis;
-
+	/**我记录的边界值，不知道为什么和获取的一样*/
+	private final  float theEdge=4665;
+	
+	
 	/**
 	 * OnlyImageView构造函数，将当前操作状态设为STATUS_INIT。
 	 * 
@@ -267,22 +270,22 @@ public class OnlyImageView extends View {
 		canvas.drawBitmap(sourceBitmap, matrix, null);
 	}
 	/**
-	 * @Description 声控的接口
+	 * @Description 声控的接口,目前只做横向移动
 	 * @author FindHao
-	 * @param direction 水平方向移动的距离
+	 * @param directionX 水平方向移动的距离
 	 * */
-	public void moveByVoice(int direction){
+	public void moveByVoice(int directionX){
 		matrix.reset();
-		float translateX = totalTranslateX+direction;
-		Log.e("qingming", "translateX "+translateX);
+		float translateX = totalTranslateX+directionX;
+//		Log.e("qingming", "translateX "+translateX+"scale"+totalRatio);
 		if(translateX>=0)translateX=0;
-		float translateY = totalTranslateY;
+		//注意这里是负值，因为左上角是0 0,而且edge值是自己测试得到的，bitmapWidth比测试的值要大，导致图片会移出边界，不知道为什么
+		if(translateX<=-(theEdge*totalRatio))translateX=-(theEdge*totalRatio);
 		// 先按照已有的缩放比例对图片进行缩放
 		matrix.postScale(totalRatio, totalRatio);
 		// 再根据移动距离进行偏移
-		matrix.postTranslate(translateX, translateY);
+		matrix.postTranslate(translateX, totalTranslateY);
 		totalTranslateX = translateX;
-		totalTranslateY = translateY;
 		invalidate();
 	}
 	
@@ -296,6 +299,7 @@ public class OnlyImageView extends View {
 			matrix.reset();
 			int bitmapWidth = sourceBitmap.getWidth();
 			int bitmapHeight = sourceBitmap.getHeight();
+			Log.e("qingming", bitmapHeight+" "+bitmapWidth);
 			if (bitmapWidth > width || bitmapHeight > height) {
 				if (bitmapWidth - width > bitmapHeight - height) {
 					// 当图片宽度大于屏幕宽度时，将图片等比例压缩，使它可以完全显示出来

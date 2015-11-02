@@ -12,14 +12,34 @@
     android:background="#000000" >
 
 	</name.findspace.qingmingshanghe.OnlyImageView>
-
-    <Button
-        android:id="@+id/button1"
+	<LinearLayout 
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation = "horizontal"
+    android:layout_alignParentBottom="true"
+	    >
+        <Button
+        android:id="@+id/autoLeft"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="37dp"
-        android:text="Button" />
+        android:text="@string/autoleft" />
+    	<Button
+        android:id="@+id/stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/stop" />
+    	<Button
+        android:id="@+id/autoRight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/autoright" />
+    	<Button
+        android:id="@+id/listenup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/listenup" />
+	    
+	</LinearLayout>
+
 
 </RelativeLayout>

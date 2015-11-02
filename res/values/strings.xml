@@ -4,5 +4,8 @@
     <string name="app_name">Qingmingshanghe</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-
+	<string name="autoleft">左漫游</string>
+	<string name="autoright">右漫游</string>
+	<string name="listenup">听我说</string>
+	<string name="stop">停下</string>
 </resources>
