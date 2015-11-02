@@ -1,11 +1,4 @@
-/* 
- * @Title:  OnlyImageView.java 
- * @Copyright:  XXX Co., Ltd. Copyright YYYY-YYYY,  All rights reserved 
- * @Description:  TODO<请描述此文件是做什么的> 
- * @author:  ZhuZiQiang 
- * @data:  2014-4-4 下午4:04:24 
- * @version:  V1.0 
- */
+
 
 package name.findspace.qingmingshanghe;
 
@@ -13,21 +6,18 @@ import name.findspace.qingmingshanghe.Common;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
 /**
- * TODO<自定义的ImageView控制，可对图片进行多点触控缩放和拖动>
- * 
- * @author ZhuZiQiang
- * @data: 2014-4-4 下午4:04:24
- * @version: V1.0
+ * @Description 用于画布的绘图，提供核心接口给其他功能
+ * @author FindHao
+ * @Date 2015.11.2
  */
-
 public class OnlyImageView extends View {
 
 	/**
@@ -35,75 +25,24 @@ public class OnlyImageView extends View {
 	 */
 	private Matrix matrix = new Matrix();
 
-	/**
-	 * 待展示的Bitmap对象
-	 */
+	/**待展示的Bitmap对象 */
 	private Bitmap sourceBitmap;
-
-	/**
-	 * 记录当前操作的状态，可选值为 1、STATUS_INIT 2、STATUS_OUT 3、STATUS_IN 4、STATUS_MOVE
-	 */
+	/**记录当前操作的状态，可选值为 1、STATUS_INIT 2、STATUS_OUT 3、STATUS_IN 4、STATUS_MOVE	 */
 	private int currentStatus;
-
+	/**ZoomImageView控件的宽度，高度*/
+	private int width,height;
+	/**记录两指同时放在屏幕上时，中心点的横坐标、纵坐标值 */
+	private float centerPointX,centerPointY;
+	/**记录当前图片的宽度、高度，图片被缩放时，这个值会一起变动	 */
+	private float currentBitmapWidth,currentBitmapHeight;
+	/**记录上次手指移动时的横坐标\纵坐标 */
+	private float lastXMove = -1,lastYMove = -1;
+	/**记录手指在横坐标\纵坐标方向上的移动距离	 */
+	private float movedDistanceX, movedDistanceY;
 	/**
-	 * ZoomImageView控件的宽度
+	 * 记录图片在矩阵上的横向偏移值\纵向偏移值
 	 */
-	private int width;
-
-	/**
-	 * ZoomImageView控件的高度
-	 */
-	private int height;
-
-	/**
-	 * 记录两指同时放在屏幕上时，中心点的横坐标值
-	 */
-	private float centerPointX;
-
-	/**
-	 * 记录两指同时放在屏幕上时，中心点的纵坐标值
-	 */
-	private float centerPointY;
-
-	/**
-	 * 记录当前图片的宽度，图片被缩放时，这个值会一起变动
-	 */
-	private float currentBitmapWidth;
-
-	/**
-	 * 记录当前图片的高度，图片被缩放时，这个值会一起变动
-	 */
-	private float currentBitmapHeight;
-
-	/**
-	 * 记录上次手指移动时的横坐标
-	 */
-	private float lastXMove = -1;
-
-	/**
-	 * 记录上次手指移动时的纵坐标
-	 */
-	private float lastYMove = -1;
-
-	/**
-	 * 记录手指在横坐标方向上的移动距离
-	 */
-	private float movedDistanceX;
-
-	/**
-	 * 记录手指在纵坐标方向上的移动距离
-	 */
-	private float movedDistanceY;
-
-	/**
-	 * 记录图片在矩阵上的横向偏移值
-	 */
-	private float totalTranslateX;
-
-	/**
-	 * 记录图片在矩阵上的纵向偏移值
-	 */
-	private float totalTranslateY;
+	private float totalTranslateX,totalTranslateY;
 
 	/**
 	 * 记录图片在矩阵上的总缩放比例
@@ -327,7 +266,26 @@ public class OnlyImageView extends View {
 		totalTranslateY = translateY;
 		canvas.drawBitmap(sourceBitmap, matrix, null);
 	}
-
+	/**
+	 * @Description 声控的接口
+	 * @author FindHao
+	 * @param direction 水平方向移动的距离
+	 * */
+	public void moveByVoice(int direction){
+		matrix.reset();
+		float translateX = totalTranslateX+direction;
+		Log.e("qingming", "translateX "+translateX);
+		if(translateX>=0)translateX=0;
+		float translateY = totalTranslateY;
+		// 先按照已有的缩放比例对图片进行缩放
+		matrix.postScale(totalRatio, totalRatio);
+		// 再根据移动距离进行偏移
+		matrix.postTranslate(translateX, translateY);
+		totalTranslateX = translateX;
+		totalTranslateY = translateY;
+		invalidate();
+	}
+	
 	/**
 	 * 对图片进行初始化操作，包括让图片居中，以及当图片大于屏幕宽高时对图片进行压缩。
 	 * 
@@ -341,21 +299,23 @@ public class OnlyImageView extends View {
 			if (bitmapWidth > width || bitmapHeight > height) {
 				if (bitmapWidth - width > bitmapHeight - height) {
 					// 当图片宽度大于屏幕宽度时，将图片等比例压缩，使它可以完全显示出来
-					float ratio = width / (bitmapWidth * 1.0f);
+//					float ratio = width / (bitmapWidth * 1.0f);
+					float ratio = 1f;
 					matrix.postScale(ratio, ratio);
-					float translateY = (height - (bitmapHeight * ratio)) / 2f;
-					// 在纵坐标方向上进行偏移，以保证图片居中显示
-					matrix.postTranslate(0, translateY);
-					totalTranslateY = translateY;
+//					float translateY = (height - (bitmapHeight * ratio)) / 2f;
+//					// 在纵坐标方向上进行偏移，以保证图片居中显示
+//					matrix.postTranslate(0, translateY);
+//					totalTranslateY = translateY;
 					totalRatio = initRatio = ratio;
 				} else {
 					// 当图片高度大于屏幕高度时，将图片等比例压缩，使它可以完全显示出来
-					float ratio = height / (bitmapHeight * 1.0f);
-					matrix.postScale(ratio, ratio);
-					float translateX = (width - (bitmapWidth * ratio)) / 2f;
-					// 在横坐标方向上进行偏移，以保证图片居中显示
-					matrix.postTranslate(translateX, 0);
-					totalTranslateX = translateX;
+					float ratio = 1f;
+//					float ratio = height / (bitmapHeight * 1.0f);
+//					matrix.postScale(ratio, ratio);
+//					float translateX = (width - (bitmapWidth * ratio)) / 2f;
+//					// 在横坐标方向上进行偏移，以保证图片居中显示
+//					matrix.postTranslate(translateX, 0);
+//					totalTranslateX = translateX;
 					totalRatio = initRatio = ratio;
 				}
 				currentBitmapWidth = bitmapWidth * initRatio;
@@ -401,5 +361,4 @@ public class OnlyImageView extends View {
 		centerPointY = (yPoint0 + yPoint1) / 2;
 	}
 
-	
 }

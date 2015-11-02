@@ -10,6 +10,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 
 public class MainActivity extends Activity {
 
@@ -18,20 +21,19 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		OnlyImageView view= (OnlyImageView) findViewById(R.id.image_view);
-//		BitmapFactory.Options options = new BitmapFactory.Options();
-//		options.inJustDecodeBounds = true;
-		
+		final OnlyImageView view= (OnlyImageView) findViewById(R.id.image_view);
 		Bitmap bitmap;
-//		BitmapFactory.decodeResource(getResources(), R.drawable.tsingming,options);
-//		options.inSampleSize = calculateInSampleSize(options, 769, 1280);
-		
-//		options. inJustDecodeBounds = false;
-//		bitmap=BitmapFactory.decodeResource(getResources(),  R.drawable.tsingming, options);
 		bitmap=BitmapFactory.decodeResource(getResources(),  R.drawable.tsingming);
 		view.setImageBitmap(bitmap);
 		Log.d(TAG, "加载结束");
+		Button bt=(Button)findViewById(R.id.button1);
+		bt.setOnClickListener(new OnClickListener(){
+			@Override
+			public void onClick(View v) {
+				view.moveByVoice();
+			}
 		
+		});
 		
 	}
 
