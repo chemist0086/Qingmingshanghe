@@ -78,6 +78,13 @@ public class OnlyImageView extends View {
 		currentStatus = Common.STATUS_INIT;
 	}
 
+	MainActivity caller;
+	/**@description 设置回调，以使用主进程的东西，比如播放音乐*/
+	public void setCaller(MainActivity caller){
+		this.caller=caller;
+	}
+	
+	
 	/**
 	 * 将待展示的图片设置进来。
 	 * 
@@ -174,6 +181,10 @@ public class OnlyImageView extends View {
 			}
 			break;
 		case MotionEvent.ACTION_UP:
+			Log.e(MainActivity.TAG, String.format("total x %f\ntotal y %f \ndistancex %f y %f", totalTranslateX,totalTranslateY,lastXMove,lastYMove));
+			
+			caller.playSound(judgeZone(totalTranslateX-lastXMove,totalTranslateY-lastYMove));
+			
 			// 手指离开屏幕时将临时值还原
 			lastXMove = -1;
 			lastYMove = -1;
@@ -364,5 +375,17 @@ public class OnlyImageView extends View {
 		centerPointX = (xPoint0 + xPoint1) / 2;
 		centerPointY = (yPoint0 + yPoint1) / 2;
 	}
-
+	/**@Description 根据传入的坐标，判断是否是属于需要音效的区域
+	 * <br>目前只考虑只返回一个区域值
+	 * */
+	private int judgeZone(float f,float g){
+		int len=Common.ZonesX.length;
+		for(int i=0;i<len;i+=2){
+			if(f<Common.ZonesX[i]&&f>Common.ZonesX[i+1]&&g<Common.ZonesY[i]&&g>Common.ZonesY[i+1]){
+				//soundpool是从1开始编号的
+				return i+1;
+			}
+		}
+		return 0;
+	}
 }

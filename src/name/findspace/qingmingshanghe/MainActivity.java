@@ -21,6 +21,8 @@ import android.app.Activity;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -49,7 +51,7 @@ public class MainActivity extends Activity {
 	private Toast mToast;
 
 	
-	
+	protected SoundPool soundPool;
 	
 	
 	@Override
@@ -57,17 +59,25 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		view= (OnlyImageView) findViewById(R.id.image_view);
+		view.setCaller(this);
 		Bitmap bitmap;
 		bitmap=BitmapFactory.decodeResource(getResources(),  R.drawable.tsingming);
 		view.setImageBitmap(bitmap);
 		mToast = Toast.makeText(this,"",Toast.LENGTH_SHORT);
-		setListener();
 		SpeechUtility.createUtility(this, SpeechConstant.APPID+"=56372416");
-		
 		mIat= SpeechRecognizer.createRecognizer(MainActivity.this, null);
+		setSoundPool();
+		setListener();
 		setParam();
 
 	}
+	private void setSoundPool(){
+		soundPool=new SoundPool(5, AudioManager.STREAM_MUSIC, 5);
+		//根据加载的顺序决定了id，所以需要和规定统一。目前1：水（船） 2：人群（集市） id从1开始
+		soundPool.load(this,R.raw.water,1);
+		soundPool.load(this, R.raw.peopleshort,1);
+	}
+	
 	/**@Description 设置语音api的参数*/
 	private void setParam(){
 		mSharedPreferences = getSharedPreferences("com.iflytek.setting",Activity.MODE_PRIVATE);
@@ -118,6 +128,13 @@ public class MainActivity extends Activity {
 			}
 		});
 	}
+	/**@Description 播放音效
+	 */
+	public void playSound(int id){
+		if(id==0)return;
+		soundPool.play(id, 1, 1, 1, 0, 1);
+	}
+	/**@Description 漫游更新画布的类，因为向左和向右漫游都调用了runnable，仅参数不同*/
 	class AutoMove implements Runnable{
 		int moveStep;
 		int state;

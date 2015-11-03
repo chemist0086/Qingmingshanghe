@@ -9,13 +9,6 @@
 
 package name.findspace.qingmingshanghe;
 
-/**
- * TODO<常量类>
- * 
- * @author ZhuZiQiang
- * @data: 2014-4-4 下午4:06:20
- * @version: V1.0
- */
 
 public class Common {
 
@@ -38,4 +31,9 @@ public class Common {
 	 * 图片拖动状态常量
 	 */
 	public static final int STATUS_MOVE = 4;
+	/**@Description 需要播放声音的区域所在的坐标
+	 * 一个区域以左上角和右下角两个点的坐标划分，(500,300)是左上角(1100,600)是右下角*/
+	public static final int ZonesX[]={-500,-1100};
+	public static final int ZonesY[]={-300,-600};
+	
 }
