@@ -18,9 +18,14 @@ import com.iflytek.cloud.SpeechRecognizer;
 import com.iflytek.cloud.SpeechUtility;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Bundle;
@@ -50,7 +55,13 @@ public class MainActivity extends Activity {
 	final String [] cmds={"左","右","停止"};
 	private Toast mToast;
 
+	/**加速度感应部分*/
+	private SensorManager sensorManager=null;
+	private Sensor sensor=null;
+	private SensorEventListener sensorEventListener=null;
+	boolean sensorLeft=false,sensorRight=false;
 	
+	/**播放音频池*/
 	protected SoundPool soundPool;
 	
 	
@@ -64,13 +75,35 @@ public class MainActivity extends Activity {
 		bitmap=BitmapFactory.decodeResource(getResources(),  R.drawable.tsingming);
 		view.setImageBitmap(bitmap);
 		mToast = Toast.makeText(this,"",Toast.LENGTH_SHORT);
+		setSoundPool();
+		//语音监听部分
 		SpeechUtility.createUtility(this, SpeechConstant.APPID+"=56372416");
 		mIat= SpeechRecognizer.createRecognizer(MainActivity.this, null);
-		setSoundPool();
 		setListener();
 		setParam();
-
+		//加速度感应部分
+		setSensor();
 	}
+	/**@Description 设置加速度感应器相关*/
+	private void setSensor(){
+		sensorManager=(SensorManager)getSystemService(Context.SENSOR_SERVICE);
+		sensor=sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		sensorEventListener=new SensorEventListener() {
+			@Override
+			public void onSensorChanged(SensorEvent event) {
+				float x = event.values[0];
+				float y = event.values[1];
+				responseSensor(x,y);
+		}
+			@Override
+			public void onAccuracyChanged(Sensor sensor, int accuracy) {
+				// TODO Auto-generated method stub
+				
+			}
+		};
+		
+	}
+	/**@Description 设置声音音频播放池*/
 	private void setSoundPool(){
 		soundPool=new SoundPool(5, AudioManager.STREAM_MUSIC, 5);
 		//根据加载的顺序决定了id，所以需要和规定统一。目前1：水（船） 2：人群（集市） id从1开始
@@ -94,10 +127,18 @@ public class MainActivity extends Activity {
 		mIat.setParameter(SpeechConstant.VAD_EOS, mSharedPreferences.getString("iat_vadeos_preference", "1000"));
 	}
 	private void setListener(){
+		stop=(Button)findViewById(R.id.stop);
+		stop.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				autoState=0;
+			}
+		});
 		autoRight=(Button)findViewById(R.id.autoRight);
 		autoRight.setOnClickListener(new OnClickListener(){
 			@Override
 			public void onClick(View v) {
+				stop.performClick();
 				new Thread(new AutoMove(1)).start();
 			}
 		});
@@ -105,14 +146,8 @@ public class MainActivity extends Activity {
 		autoLeft.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				stop.performClick();
 				new Thread(new AutoMove(-1)).start();
-			}
-		});
-		stop=(Button)findViewById(R.id.stop);
-		stop.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				autoState=0;
 			}
 		});
 		listenup=(Button)findViewById(R.id.listenup);
@@ -127,6 +162,7 @@ public class MainActivity extends Activity {
 				}
 			}
 		});
+		
 	}
 	/**@Description 播放音效
 	 */
@@ -141,7 +177,7 @@ public class MainActivity extends Activity {
 		/**实际上传入的是autostate*/
 		public AutoMove(int moveStep) {
 			state=moveStep;
-			this.moveStep=moveStep*2;
+			this.moveStep=moveStep*5;
 		}
 		@Override
 		public void run() {
@@ -154,12 +190,33 @@ public class MainActivity extends Activity {
 					}
 				});
 				try {
-					Thread.sleep(50);
+					Thread.sleep(80);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
 		}
+	}
+	/**@Description 对加速度感应器进行感应*/
+	public void responseSensor(float x,float y){
+		int xx=(int )x;
+		int yy=(int)y;
+		//右侧被抬起，向左跑
+		if(yy<=1 &&xx>3&&!sensorLeft ){
+			stop.performClick();
+			autoLeft.performClick();
+			sensorLeft=true;
+			sensorRight=false;
+		}
+		else {
+			if(yy<=1 &&xx<=-3 &&!sensorRight){
+				stop.performClick();
+				autoRight.performClick();
+				sensorRight=true;
+				sensorLeft=false;
+			}
+		}
+		Log.e(TAG, String.format("x %f xx %d y %f yy %d", x,xx,y,yy));
 	}
 	/**@Description 对听到的命令进行响应*/
 	public void responseCommand(String cmd){
@@ -234,6 +291,16 @@ public class MainActivity extends Activity {
 			
 		}
 		};
+	
+	protected void onResume() {
+		super.onResume();
+		sensorManager.registerListener(sensorEventListener, sensor,SensorManager.SENSOR_DELAY_GAME);
+	};
+	@Override
+	protected void onPause() {
+		super.onPause();
+		sensorManager.unregisterListener(sensorEventListener);
+	}
 	protected void onDestroy() {
 		super.onDestroy();
 		mIat.cancel();
