@@ -64,6 +64,8 @@ public class MainActivity extends Activity {
 	/**播放音频池*/
 	protected SoundPool soundPool;
 	
+	/**记录多次触发向左或者向右的值，如果需要切换方向，则先把这个值给抵消掉*/
+	private static int offset=0;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -132,6 +134,7 @@ public class MainActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				autoState=0;
+//				new Thread(new AutoMove(-offset)).start();
 			}
 		});
 		autoRight=(Button)findViewById(R.id.autoRight);
@@ -140,6 +143,7 @@ public class MainActivity extends Activity {
 			public void onClick(View v) {
 				stop.performClick();
 				new Thread(new AutoMove(1)).start();
+				offset+=1;
 			}
 		});
 		autoLeft=(Button)findViewById(R.id.autoLeft);
@@ -148,6 +152,7 @@ public class MainActivity extends Activity {
 			public void onClick(View v) {
 				stop.performClick();
 				new Thread(new AutoMove(-1)).start();
+				offset-=1;
 			}
 		});
 		listenup=(Button)findViewById(R.id.listenup);
@@ -177,7 +182,7 @@ public class MainActivity extends Activity {
 		/**实际上传入的是autostate*/
 		public AutoMove(int moveStep) {
 			state=moveStep;
-			this.moveStep=moveStep*5;
+			this.moveStep=moveStep*2;
 		}
 		@Override
 		public void run() {
@@ -190,7 +195,7 @@ public class MainActivity extends Activity {
 					}
 				});
 				try {
-					Thread.sleep(80);
+					Thread.sleep(50);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
